@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mohtashim Khan — Video Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #161616;
+    --accent: #FF3D00;
+    --accent2: #FF8A65;
+    --gold: #FFD166;
+    --white: #F5F0EB;
+    --gray: #888888;
+    --gray2: #444444;
+    --border: rgba(255,255,255,0.07);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── CUSTOM CURSOR ── */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(255,61,0,0.5);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.18s ease;
+  }
+  body:hover .cursor { transform: scale(1); }
+
+  /* ── GRAIN OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9000;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 60px;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.95), transparent);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--white); }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 120px 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg-text {
+    position: absolute;
+    bottom: -30px; right: -20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(120px, 18vw, 280px);
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .hero-left { z-index: 2; }
+
+  .hero-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-tag::before {
+    content: '';
+    display: block;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+
+  .hero-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 9vw, 130px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .hero-name .line2 { color: var(--accent); }
+
+  .hero-title {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--gray);
+    letter-spacing: 1px;
+    margin-bottom: 48px;
+    margin-top: 20px;
+  }
+
+  .hero-cta-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 16px 32px;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: #fff; color: var(--accent); transform: translateY(-2px); }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1px solid var(--gray2);
+    color: var(--gray);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 16px 32px;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--white); color: var(--white); transform: translateY(-2px); }
+
+  .hero-right {
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .stat-box {
+    background: var(--bg3);
+    padding: 28px 24px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-box::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .stat-box:hover::after { transform: scaleX(1); }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  .hero-contact-strip {
+    display: flex;
+    gap: 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--gray);
+    flex-wrap: wrap;
+    max-width: 360px;
+    justify-content: flex-end;
+  }
+  .hero-contact-strip a { color: var(--gray); text-decoration: none; }
+  .hero-contact-strip a:hover { color: var(--accent); }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px; left: 60px;
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+  .scroll-line {
+    width: 1px; height: 48px;
+    background: var(--gray2);
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    animation: scrollDrop 2s ease-in-out infinite;
+  }
+  @keyframes scrollDrop {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+
+  /* ── SECTIONS ── */
+  section { padding: 100px 60px; }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 24px; height: 1px;
+    background: var(--accent);
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 80px);
+    line-height: 1;
+    letter-spacing: 2px;
+    color: var(--white);
+    margin-bottom: 60px;
+  }
+
+  /* ── ABOUT ── */
+  #about { background: var(--bg2); }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .about-text p {
+    font-size: 17px;
+    line-height: 1.85;
+    color: #BBBBBB;
+    margin-bottom: 24px;
+  }
+  .about-text p strong { color: var(--white); font-weight: 500; }
+
+  .about-skills { display: flex; flex-direction: column; gap: 20px; }
+
+  .skill-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .skill-top {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--gray);
+  }
+  .skill-top span:last-child { color: var(--accent); }
+  .skill-bar {
+    height: 2px;
+    background: var(--gray2);
+    position: relative;
+    overflow: hidden;
+  }
+  .skill-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0;
+    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── PORTFOLIO ── */
+  #portfolio { background: var(--bg); }
+
+  .portfolio-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    background: var(--bg3);
+    color: var(--gray);
+    border: none;
+    cursor: none;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+  }
+  .tab-btn.active, .tab-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2px;
+  }
+
+  .portfolio-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    group: true;
+    transition: transform 0.3s ease;
+    display: none;
+  }
+  .portfolio-card.visible { display: block; }
+  .portfolio-card:hover { transform: translateY(-4px); z-index: 2; }
+
+  .card-thumb {
+    aspect-ratio: 16/9;
+    background: var(--bg2);
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .card-thumb-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--bg2) 0%, #1a1a1a 100%);
+  }
+
+  .card-thumb-icon {
+    position: relative;
+    z-index: 2;
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(255,61,0,0.15);
+    border: 1px solid rgba(255,61,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+  }
+  .portfolio-card:hover .card-thumb-icon {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.1);
+  }
+  .card-thumb-icon svg { width: 24px; height: 24px; fill: var(--accent); transition: fill 0.3s; }
+  .portfolio-card:hover .card-thumb-icon svg { fill: #fff; }
+
+  .card-type-tag {
+    position: absolute;
+    top: 16px; left: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #fff;
+    padding: 4px 10px;
+    z-index: 3;
+  }
+
+  .card-overlay {
+    position: absolute; inset: 0;
+    background: rgba(255,61,0,0.0);
+    transition: background 0.3s;
+    z-index: 4;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .portfolio-card:hover .card-overlay { background: rgba(255,61,0,0.08); }
+
+  .card-body { padding: 24px; }
+  .card-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .card-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+    transition: gap 0.2s;
+  }
+  .card-link:hover { gap: 14px; }
+  .card-link svg { width: 14px; height: 14px; fill: var(--accent); }
+
+  /* ── EXPERIENCE ── */
+  #experience { background: var(--bg2); }
+
+  .exp-item {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 60px;
+    padding: 48px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .exp-item:first-of-type { border-top: 1px solid var(--border); }
+
+  .exp-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--gray);
+    padding-top: 4px;
+  }
+  .exp-date .year {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--accent);
+    display: block;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .exp-role {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .exp-company {
+    font-size: 14px;
+    color: var(--accent2);
+    margin-bottom: 20px;
+    font-weight: 400;
+  }
+  .exp-desc {
+    font-size: 14px;
+    color: #999;
+    line-height: 1.8;
+  }
+  .exp-tags {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .exp-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid var(--gray2);
+    color: var(--gray);
+    padding: 5px 12px;
+  }
+
+  /* ── SERVICES ── */
+  #services { background: var(--bg); }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .service-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 40px 32px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 0;
+    background: var(--accent);
+    transition: height 0.4s ease;
+  }
+  .service-card:hover::before { height: 100%; }
+  .service-card:hover { background: #161616; transform: translateY(-4px); }
+
+  .service-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    color: rgba(255,61,0,0.1);
+    line-height: 1;
+    margin-bottom: 20px;
+    transition: color 0.3s;
+  }
+  .service-card:hover .service-num { color: rgba(255,61,0,0.25); }
+
+  .service-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  .service-desc {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.7;
+  }
+
+  /* ── CONTACT ── */
+  #contact {
+    background: var(--bg2);
+    position: relative;
+    overflow: hidden;
+  }
+  #contact::before {
+    content: 'HIRE ME';
+    position: absolute;
+    bottom: -40px; right: -30px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 200px;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,255,255,0.03);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .contact-inner {
+    max-width: 700px;
+    position: relative; z-index: 2;
+  }
+
+  .contact-info { margin-top: 48px; display: flex; flex-direction: column; gap: 24px; }
+
+  .contact-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .contact-row:hover {
+    border-left-color: var(--accent);
+    transform: translateX(8px);
+  }
+
+  .contact-icon {
+    width: 40px; height: 40px;
+    background: rgba(255,61,0,0.1);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .contact-icon svg { width: 18px; height: 18px; fill: var(--accent); }
+
+  .contact-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .contact-value {
+    font-size: 15px;
+    color: var(--white);
+    font-weight: 400;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--bg);
+    padding: 32px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--gray);
+  }
+
+  /* ── ANIMATIONS ── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-left > * {
+    animation: fadeSlideUp 0.8s ease forwards;
+    opacity: 0;
+  }
+  .hero-left > *:nth-child(1) { animation-delay: 0.1s; }
+  .hero-left > *:nth-child(2) { animation-delay: 0.25s; }
+  .hero-left > *:nth-child(3) { animation-delay: 0.35s; }
+  .hero-left > *:nth-child(4) { animation-delay: 0.5s; }
+
+  .hero-right {
+    animation: fadeSlideUp 0.8s 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    #hero { grid-template-columns: 1fr; padding: 100px 24px 60px; }
+    .hero-right { align-items: flex-start; margin-top: 48px; }
+    .hero-stats { max-width: 100%; }
+    section { padding: 72px 24px; }
+    .about-grid { grid-template-columns: 1fr; gap: 48px; }
+    .services-grid { grid-template-columns: 1fr 1fr; }
+    .exp-item { grid-template-columns: 1fr; gap: 16px; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+  @media (max-width: 600px) {
+    .services-grid { grid-template-columns: 1fr; }
+    .portfolio-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#hero" class="nav-logo">MK<span>.</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#portfolio">Work</a></li>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-text">EDITOR</div>
+
+  <div class="hero-left">
+    <div class="hero-tag">Available for work</div>
+    <h1 class="hero-name">
+      <span>MOHTASHIM</span><br>
+      <span class="line2">KHAN</span>
+    </h1>
+    <p class="hero-title">Video Editor &nbsp;·&nbsp; Motion Graphics &nbsp;·&nbsp; Post-Production</p>
+    <div class="hero-cta-row">
+      <a href="#portfolio" class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        View My Work
+      </a>
+      <a href="#contact" class="btn-ghost">Get In Touch</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-stats">
+      <div class="stat-box">
+        <div class="stat-num">2+</div>
+        <div class="stat-label">Years Experience</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Content Styles</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Core Tools</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">∞</div>
+        <div class="stat-label">Stories Told</div>
+      </div>
+    </div>
+    <div class="hero-contact-strip">
+      <a href="mailto:newkunzete@gmail.com">newkunzete@gmail.com</a>
+      <span>·</span>
+      <a href="tel:+923282359199">+92 328 2359199</a>
+      <span>·</span>
+      <span>Karachi, PK</span>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-label">01 — About</div>
+  <h2 class="section-title">Crafting stories<br>frame by frame</h2>
+
+  <div class="about-grid">
+    <div class="about-text fade-in">
+      <p>I'm <strong>Mohtashim Khan</strong> — a video editor based in Karachi with a sharp eye for pacing, narrative, and visual impact. I turn raw footage into content that holds attention and moves people.</p>
+      <p>From <strong>high-energy talking-head videos</strong> with dynamic captions, to <strong>sleek SaaS motion graphics</strong> that make software feel alive, to <strong>faceless content</strong> that tells stories purely through visuals — I work across the full spectrum of modern video formats.</p>
+      <p>Beyond editing, I mentor junior creators, helping them build the technical and creative skills needed to produce professional-level work.</p>
+    </div>
+
+    <div class="about-skills fade-in">
+      <div class="skill-row">
+        <div class="skill-top"><span>Adobe Premiere Pro</span><span>95%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-width="95"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-top"><span>Adobe After Effects</span><span>90%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-width="90"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-top"><span>Motion Graphics</span><span>88%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-width="88"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-top"><span>Talking-Head Editing</span><span>95%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-width="95"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-top"><span>Faceless Production</span><span>85%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-width="85"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-top"><span>Color Grading</span><span>82%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-width="82"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+  <div class="section-label">02 — Portfolio</div>
+  <h2 class="section-title">Selected<br>Work</h2>
+
+  <div class="portfolio-tabs">
+    <button class="tab-btn active" data-filter="all">All Work</button>
+    <button class="tab-btn" data-filter="talking-head">Talking Head</button>
+    <button class="tab-btn" data-filter="faceless">Faceless</button>
+    <button class="tab-btn" data-filter="motion">Motion Graphics</button>
+  </div>
+
+  <div class="portfolio-grid">
+
+    <!-- Talking Head 1 -->
+    <div class="portfolio-card visible" data-category="talking-head">
+      <div class="card-thumb">
+        <div class="card-thumb-bg"></div>
+        <div class="card-type-tag">Talking Head</div>
+        <div class="card-thumb-icon">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">Talking Head — Sample 01</div>
+        <div class="card-desc">Dynamic presenter-style edit with branded on-screen captions, text animations, and smooth pacing for maximum audience retention.</div>
+        <a href="https://youtu.be/wyBRRNxRv9A?si=680w9X29GDiAzX7z" target="_blank" class="card-link">
+          Watch on YouTube
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Talking Head 2 -->
+    <div class="portfolio-card visible" data-category="talking-head">
+      <div class="card-thumb">
+        <div class="card-thumb-bg"></div>
+        <div class="card-type-tag">Talking Head</div>
+        <div class="card-thumb-icon">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">Talking Head — Sample 02</div>
+        <div class="card-desc">Clean, high-energy presenter edit with precise jump cut sequencing, lower thirds, and b-roll integration for a polished look.</div>
+        <a href="https://youtu.be/a55ArWLOzfQ?si=ENfY3hhv-cjDXW48" target="_blank" class="card-link">
+          Watch on YouTube
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Talking Head 3 -->
+    <div class="portfolio-card visible" data-category="talking-head">
+      <div class="card-thumb">
+        <div class="card-thumb-bg"></div>
+        <div class="card-type-tag">Talking Head</div>
+        <div class="card-thumb-icon">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">Talking Head — Drive Sample</div>
+        <div class="card-desc">Full talking-head production with motion title cards, color-graded footage, and branded overlays for a premium content feel.</div>
+        <a href="https://drive.google.com/file/d/10VnuXqGUlUzt-NdoBl8rsd-p6jzD-rFD/view" target="_blank" class="card-link">
+          View on Drive
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Talking Head 4 -->
+    <div class="portfolio-card visible" data-category="talking-head">
+      <div class="card-thumb">
+        <div class="card-thumb-bg"></div>
+        <div class="card-type-tag">Talking Head</div>
+        <div class="card-thumb-icon">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">Talking Head — Drive Sample 2</div>
+        <div class="card-desc">Interview-style edit featuring dynamic graphic overlays, sound design enhancement, and tightly paced narrative flow.</div>
+        <a href="https://drive.google.com/file/d/11aFsyPV5TZjakWZzPwPWemQRLKbvtCa6/view" target="_blank" class="card-link">
+          View on Drive
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Faceless -->
+    <div class="portfolio-card visible" data-category="faceless">
+      <div class="card-thumb">
+        <div class="card-thumb-bg" style="background: linear-gradient(135deg, #0d1117 0%, #1a1a2e 100%);"></div>
+        <div class="card-type-tag">Faceless</div>
+        <div class="card-thumb-icon">
+          <svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">Faceless Narrative Video</div>
+        <div class="card-desc">Story-driven faceless content with stock footage curation, voiceover synchronization, and immersive visual storytelling — no on-camera presence needed.</div>
+        <a href="https://youtu.be/I44ihThwqYo?si=Q3LyG_OIFNEWCel2" target="_blank" class="card-link">
+          Watch on YouTube
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Motion 1 -->
+    <div class="portfolio-card visible" data-category="motion">
+      <div class="card-thumb">
+        <div class="card-thumb-bg" style="background: linear-gradient(135deg, #0f0c29 0%, #1a0a00 100%);"></div>
+        <div class="card-type-tag">Motion Graphics</div>
+        <div class="card-thumb-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">SaaS Motion Graphics — 01</div>
+        <div class="card-desc">After Effects-driven SaaS product animation with UI walkthroughs, kinetic typography, and brand-consistent visual language to drive conversions.</div>
+        <a href="https://drive.google.com/file/d/1HpEjyY8WTynwDqWj95VHwLh9V37J6b6p/view" target="_blank" class="card-link">
+          View on Drive
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Motion 2 -->
+    <div class="portfolio-card visible" data-category="motion">
+      <div class="card-thumb">
+        <div class="card-thumb-bg" style="background: linear-gradient(135deg, #0f0c29 0%, #1a0a00 100%);"></div>
+        <div class="card-type-tag">Motion Graphics</div>
+        <div class="card-thumb-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">SaaS Motion Graphics — 02</div>
+        <div class="card-desc">Animated SaaS advertisement built in After Effects, featuring smooth transitions, data visualization sequences, and a compelling call-to-action finish.</div>
+        <a href="https://drive.google.com/file/d/1nVHLCVFDsMHfQeRNVc_mitvOJ2ZHINoz/view" target="_blank" class="card-link">
+          View on Drive
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="section-label">03 — Experience</div>
+  <h2 class="section-title">Where I've<br>Worked</h2>
+
+  <div class="exp-item fade-in">
+    <div class="exp-date">
+      <span class="year">2024</span>
+      Jul 2024 – Present
+    </div>
+    <div>
+      <div class="exp-role">Video Editor</div>
+      <div class="exp-company">RAWD Pvt Ltd. — Karachi, Pakistan</div>
+      <div class="exp-desc">
+        End-to-end post-production across talking-head, faceless, and motion graphics projects. Producing polished content for client campaigns, brand videos, and digital platforms. Designing After Effects animations and SaaS product demos. Mentoring junior editors on workflow, pacing, and storytelling fundamentals.
+      </div>
+      <div class="exp-tags">
+        <span class="exp-tag">Premiere Pro</span>
+        <span class="exp-tag">After Effects</span>
+        <span class="exp-tag">Motion Graphics</span>
+        <span class="exp-tag">Mentorship</span>
+        <span class="exp-tag">Brand Video</span>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-label">04 — Services</div>
+  <h2 class="section-title">What I<br>Offer</h2>
+
+  <div class="services-grid">
+    <div class="service-card fade-in">
+      <div class="service-num">01</div>
+      <div class="service-title">Talking Head Editing</div>
+      <div class="service-desc">Presenter-style video editing with dynamic captions, jump cuts, lower thirds, b-roll integration, and on-screen graphics that keep viewers watching.</div>
+    </div>
+    <div class="service-card fade-in">
+      <div class="service-num">02</div>
+      <div class="service-title">Faceless Video Production</div>
+      <div class="service-desc">Story-led content without on-camera presence — voiceover sync, stock footage curation, text overlays, and immersive pacing for YouTube and social media.</div>
+    </div>
+    <div class="service-card fade-in">
+      <div class="service-num">03</div>
+      <div class="service-title">Motion Graphics & SaaS Ads</div>
+      <div class="service-desc">After Effects animations for software products — UI walkthroughs, kinetic typography, data visualizations, and high-converting ad sequences.</div>
+    </div>
+    <div class="service-card fade-in">
+      <div class="service-num">04</div>
+      <div class="service-title">Color Grading</div>
+      <div class="service-desc">Professional color correction and grading in Premiere Pro to achieve a consistent, cinematic look that elevates your brand's visual identity.</div>
+    </div>
+    <div class="service-card fade-in">
+      <div class="service-num">05</div>
+      <div class="service-title">Post-Production Workflow</div>
+      <div class="service-desc">Full end-to-end post-production management — from raw footage to final export — optimized for YouTube, Instagram, LinkedIn, and client delivery.</div>
+    </div>
+    <div class="service-card fade-in">
+      <div class="service-num">06</div>
+      <div class="service-title">Editor Mentorship</div>
+      <div class="service-desc">1-on-1 coaching and feedback for new video editors. Covering Premiere Pro, After Effects, editing theory, and building a professional-level workflow.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-label">05 — Contact</div>
+  <h2 class="section-title">Let's Work<br>Together</h2>
+
+  <div class="contact-inner fade-in">
+    <p style="font-size:16px; color:#999; line-height:1.8; max-width:480px;">
+      Have a project in mind? Whether it's a YouTube series, a product launch video, or branded content — I'd love to hear about it. Reach out and let's make something great.
+    </p>
+
+    <div class="contact-info">
+      <a href="mailto:newkunzete@gmail.com" class="contact-row">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </div>
+        <div>
+          <span class="contact-label">Email</span>
+          <span class="contact-value">newkunzete@gmail.com</span>
+        </div>
+      </a>
+
+      <a href="tel:+923282359199" class="contact-row">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+        </div>
+        <div>
+          <span class="contact-label">Phone / WhatsApp</span>
+          <span class="contact-value">+92 328 2359199</span>
+        </div>
+      </a>
+
+      <a href="https://docs.google.com/document/d/1IJxP6DSYakltNFA7jIyDcLtjgzmcbnBmNxcTqidXarQ/edit" target="_blank" class="contact-row">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        </div>
+        <div>
+          <span class="contact-label">Portfolio Document</span>
+          <span class="contact-value">View Full Portfolio on Google Drive</span>
+        </div>
+      </a>
+
+      <div class="contact-row" style="cursor:default;">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <div>
+          <span class="contact-label">Location</span>
+          <span class="contact-value">Karachi 74000, Pakistan</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>© 2026 Mohtashim Khan — Video Editor</div>
+  <div>Karachi, Pakistan</div>
+  <div>Built for hire.</div>
+</footer>
+
+<script>
+  // ── Cursor ──
+  const cursor = document.getElementById('cursor');
+  const ring   = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.transform = `translate(${mx - 6}px, ${my - 6}px)`;
+  });
+
+  function animRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.transform = `translate(${rx - 18}px, ${ry - 18}px)`;
+    requestAnimationFrame(animRing);
+  }
+  animRing();
+
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform += ' scale(2)';
+      ring.style.width = '56px'; ring.style.height = '56px';
+    });
+    el.addEventListener('mouseleave', () => {
+      ring.style.width = '36px'; ring.style.height = '36px';
+    });
+  });
+
+  // ── Intersection Observer for fade-in ──
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        // animate skill bars
+        e.target.querySelectorAll('.skill-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+
+  // Also trigger skill bars if about section already in view
+  document.querySelectorAll('.skill-fill').forEach(bar => {
+    const parent = bar.closest('.fade-in');
+    if (!parent) bar.style.width = bar.dataset.width + '%';
+  });
+
+  // ── Portfolio filter tabs ──
+  const tabs  = document.querySelectorAll('.tab-btn');
+  const cards = document.querySelectorAll('.portfolio-card');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const filter = tab.dataset.filter;
+      cards.forEach(card => {
+        if (filter === 'all' || card.dataset.category === filter) {
+          card.classList.add('visible');
+        } else {
+          card.classList.remove('visible');
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>
